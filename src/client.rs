@@ -18,7 +18,12 @@ pub struct Client {
 pub enum ApiError {
     Unauthorized,
     RateLimited,
-    Status { code: u16, message: String },
+    Status {
+        code: u16,
+        message: String,
+        /// `error.request_id` from the API envelope — quote it when reporting a bug.
+        request_id: Option<String>,
+    },
     Transport(String),
     Decode(String),
     Timeout(String),
@@ -32,7 +37,17 @@ impl std::fmt::Display for ApiError {
                 "API key rejected (401). Check TRUSTBEAT_API_KEY, or get a key at https://trustbeat.eu/register"
             ),
             Self::RateLimited => write!(f, "rate limited (429) — retry shortly or upgrade your plan"),
-            Self::Status { code, message } => write!(f, "API returned {code}: {message}"),
+            Self::Status {
+                code,
+                message,
+                request_id,
+            } => {
+                write!(f, "API returned {code}: {message}")?;
+                match request_id {
+                    Some(id) => write!(f, " (request id: {id})"),
+                    None => Ok(()),
+                }
+            }
             Self::Transport(m) => write!(f, "network error: {m}"),
             Self::Decode(m) => write!(f, "could not parse API response: {m}"),
             Self::Timeout(m) => write!(f, "{m}"),
@@ -145,19 +160,43 @@ fn handle(resp: Result<ureq::Response, ureq::Error>) -> Result<serde_json::Value
         }
         Err(ureq::Error::Status(429, _)) => Err(ApiError::RateLimited),
         Err(ureq::Error::Status(code, r)) => {
-            let message = r
-                .into_json::<serde_json::Value>()
-                .ok()
-                .and_then(|v| {
-                    v.get("message")
-                        .or_else(|| v.get("error"))
-                        .and_then(|m| m.as_str().map(String::from))
-                })
-                .unwrap_or_else(|| "no details".into());
-            Err(ApiError::Status { code, message })
+            let body = r.into_json::<serde_json::Value>().ok();
+            let (message, request_id) = match &body {
+                Some(v) => (extract_message(v), extract_request_id(v)),
+                None => (None, None),
+            };
+            Err(ApiError::Status {
+                code,
+                message: message.unwrap_or_else(|| "no details".into()),
+                request_id,
+            })
         }
         Err(ureq::Error::Transport(t)) => Err(ApiError::Transport(t.to_string())),
     }
+}
+
+/// Pulls the human-readable message out of an API error body.
+///
+/// The API's envelope is `{"error": {"code", "message", "request_id"}}` — the
+/// message lives one level down. Flat `message` / `error` strings are also
+/// accepted so a proxy or a future shape still yields something readable.
+fn extract_message(v: &serde_json::Value) -> Option<String> {
+    v.get("error")
+        .and_then(|e| e.get("message"))
+        .and_then(|m| m.as_str())
+        .or_else(|| v.get("message").and_then(|m| m.as_str()))
+        .or_else(|| v.get("error").and_then(|e| e.as_str()))
+        .map(str::to_string)
+        .filter(|s| !s.is_empty())
+}
+
+fn extract_request_id(v: &serde_json::Value) -> Option<String> {
+    v.get("error")
+        .and_then(|e| e.get("request_id"))
+        .and_then(|m| m.as_str())
+        .or_else(|| v.get("request_id").and_then(|m| m.as_str()))
+        .map(str::to_string)
+        .filter(|s| !s.is_empty())
 }
 
 fn urlencode(s: &str) -> String {
@@ -194,9 +233,60 @@ mod tests {
         assert!(ApiError::RateLimited.to_string().contains("429"));
         assert!(ApiError::Status {
             code: 500,
-            message: "boom".into()
+            message: "boom".into(),
+            request_id: None,
         }
         .to_string()
         .contains("boom"));
+    }
+
+    #[test]
+    fn a_status_error_quotes_the_request_id_when_there_is_one() {
+        let rendered = ApiError::Status {
+            code: 404,
+            message: "Tracking ID not found.".into(),
+            request_id: Some("req_01KZ1095C1K2H0Q9PFBYW15SNY".into()),
+        }
+        .to_string();
+        assert!(rendered.contains("Tracking ID not found."));
+        assert!(rendered.contains("req_01KZ1095C1K2H0Q9PFBYW15SNY"));
+    }
+
+    /// Verbatim body from production, 2026-08-02.
+    #[test]
+    fn reads_the_nested_error_envelope_the_api_actually_sends() {
+        let body: serde_json::Value = serde_json::from_str(
+            r#"{"error":{"code":"NOT_FOUND","message":"Tracking ID not found.",
+                "request_id":"req_01KZ1095C1K2H0Q9PFBYW15SNY"}}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            extract_message(&body).as_deref(),
+            Some("Tracking ID not found.")
+        );
+        assert_eq!(
+            extract_request_id(&body).as_deref(),
+            Some("req_01KZ1095C1K2H0Q9PFBYW15SNY")
+        );
+    }
+
+    #[test]
+    fn falls_back_to_flat_shapes() {
+        let flat_message: serde_json::Value = serde_json::json!({"message": "plain"});
+        assert_eq!(extract_message(&flat_message).as_deref(), Some("plain"));
+
+        let flat_error: serde_json::Value = serde_json::json!({"error": "just a string"});
+        assert_eq!(
+            extract_message(&flat_error).as_deref(),
+            Some("just a string")
+        );
+    }
+
+    #[test]
+    fn a_body_with_no_usable_message_yields_none() {
+        assert_eq!(extract_message(&serde_json::json!({})), None);
+        assert_eq!(extract_message(&serde_json::json!({"error": {}})), None);
+        assert_eq!(extract_message(&serde_json::json!({"message": ""})), None);
+        assert_eq!(extract_request_id(&serde_json::json!({"error": {}})), None);
     }
 }
