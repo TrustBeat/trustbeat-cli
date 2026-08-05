@@ -8,6 +8,9 @@ Anchor files to **qualified eIDAS timestamps** and verify the proofs **offline**
 A single static binary. Your files never leave your machine — only their SHA-256
 digest is transmitted.
 
+Part of **[TrustBeat](https://trustbeat.eu/en)** — digital trust infrastructure for the EU.
+Prefer a library? Python, TypeScript, Java, C# and Go SDKs: **[trustbeat.eu/en/sdks](https://trustbeat.eu/en/sdks)**.
+
 ```console
 $ trustbeat anchor contract.pdf --wait
 ✓ sha256   9f2a1c…4b7e   contract.pdf
@@ -32,7 +35,9 @@ PROOF VALID
 cargo install trustbeat
 ```
 
-Or grab a prebuilt binary from [Releases](https://github.com/TrustBeat/trustbeat-cli/releases).
+No Rust toolchain? You can also [build from source](#building-from-source).
+Prebuilt binaries for Linux, macOS and Windows are coming with the first tagged
+[release](https://github.com/TrustBeat/trustbeat-cli/releases).
 
 ## Verification works offline, forever
 
@@ -155,6 +160,23 @@ not a terminal.
 cargo build --release
 cargo test
 ```
+
+## Documentation
+
+Full API reference and guides at [api.trustbeat.eu/docs](https://api.trustbeat.eu/docs).
+
+This CLI covers file anchoring. The same qualified-timestamp infrastructure also
+backs:
+
+| | |
+|---|---|
+| [Tamper-Evident Logs](https://trustbeat.eu/en/products/tamper-evident-logs) | Sealed log trails for NIS2 Article 21 |
+| [AI Decision Anchoring](https://trustbeat.eu/en/products/ai-decision-anchoring) | Provable records of model decisions |
+| [Audit Trail](https://trustbeat.eu/en/products/audit-trail) | Append-only, independently verifiable event history |
+| [EU Digital Identity](https://trustbeat.eu/en/products/eu-digital-identity) | EUDI Wallet / eIDAS 2 credential verification |
+| [Signature Verification](https://trustbeat.eu/en/verify-signature) | Full qualified-status assessment against the EU Trusted List |
+
+Free tier — 100 anchors a month, no card: **[trustbeat.eu/en/pricing](https://trustbeat.eu/en/pricing)**.
 
 ## License
 
