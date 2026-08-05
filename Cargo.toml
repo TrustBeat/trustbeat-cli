@@ -14,6 +14,8 @@ keywords = ["timestamp", "rfc3161", "eidas", "merkle", "notarization"]
 categories = ["command-line-utilities", "cryptography"]
 # tests/fixtures/demo-proof.json is include_str!'d by proof.rs, so it must ship
 # inside the published crate — do not add it to `exclude`.
+# The release workflow only matters in the mirrored repo, not to crate consumers.
+exclude = [".github/"]
 
 [[bin]]
 name = "trustbeat"

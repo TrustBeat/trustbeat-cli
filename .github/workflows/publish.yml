@@ -1,0 +1,210 @@
+# Publishes the `trustbeat` CLI on a version tag: crates.io + a GitHub Release
+# carrying prebuilt binaries.
+#
+# This workflow lives at the root of TrustBeat/trustbeat-cli (mirrored from
+# eu-security-app cli/). It does NOT run in the monorepo — GitHub only executes
+# workflows at the repository root. Note the consequence: it cannot be tested
+# before it runs for real, so the first tag is the first execution.
+#
+# Paths here are relative to the mirrored repo root, where Cargo.toml sits at
+# the top level — there is no cli/ prefix.
+#
+# Auth: crates.io Trusted Publishing (OIDC) — no token stored. Configure the
+# trusted publisher once on crates.io: crate "trustbeat" → Settings → Trusted
+# Publishing → add GitHub publisher (owner: TrustBeat, repo: trustbeat-cli,
+# workflow: publish.yml). Until that exists, the publish job fails at the
+# auth step.
+#
+# Release order is deliberate: every target must build before anything is
+# pushed to crates.io, because a publish cannot be undone — only yanked.
+name: Publish
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false  # never interrupt a half-finished release
+
+jobs:
+  # ── Gate ─────────────────────────────────────────────────────────────────────
+  check:
+    name: Gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal --component clippy,rustfmt
+
+      - name: Read crate version
+        id: version
+        run: |
+          v=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "crate version: $v"
+
+      - name: Verify tag matches crate version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="${{ steps.version.outputs.version }}"
+          echo "tag=$tag pkg=$pkg"
+          [ "$tag" = "$pkg" ] || { echo "::error::tag $tag != Cargo.toml version $pkg"; exit 1; }
+
+      - name: Format
+        run: cargo fmt --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets --locked -- -D warnings
+
+      - name: Tests
+        run: cargo test --locked
+
+  # ── Binaries ─────────────────────────────────────────────────────────────────
+  # Runner-native targets only. The TLS stack is rustls + ring, and ring is the
+  # dependency that makes cross-compilation painful — building each target on
+  # its own architecture avoids `cross` entirely.
+  binaries:
+    name: Build ${{ matrix.target }}
+    needs: check
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false  # report every broken target in one run, not just the first
+      matrix:
+        include:
+          - { target: x86_64-unknown-linux-gnu,  os: ubuntu-latest,    archive: tar.gz }
+          # musl is the genuinely static build — the one the README's "single
+          # static binary" claim refers to, and the one that works in scratch
+          # and distroless images. The -gnu build links against glibc.
+          - { target: x86_64-unknown-linux-musl, os: ubuntu-latest,    archive: tar.gz, musl: true }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm, archive: tar.gz }
+          - { target: x86_64-apple-darwin,       os: macos-13,         archive: tar.gz }
+          - { target: aarch64-apple-darwin,      os: macos-14,         archive: tar.gz }
+          - { target: x86_64-pc-windows-msvc,    os: windows-latest,   archive: zip }
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+
+      - name: Set up Rust
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup target add ${{ matrix.target }}
+
+      - name: Install musl toolchain
+        if: matrix.musl
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - name: Build
+        shell: bash
+        env:
+          CC_x86_64_unknown_linux_musl: musl-gcc
+        run: cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Package
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ needs.check.outputs.version }}"
+          stem="trustbeat-${version}-${{ matrix.target }}"
+          mkdir -p "dist/${stem}"
+
+          if [ "${{ matrix.archive }}" = "zip" ]; then
+            cp "target/${{ matrix.target }}/release/trustbeat.exe" "dist/${stem}/"
+          else
+            cp "target/${{ matrix.target }}/release/trustbeat" "dist/${stem}/"
+          fi
+          cp README.md LICENSE "dist/${stem}/"
+
+          cd dist
+          if [ "${{ matrix.archive }}" = "zip" ]; then
+            7z a "${stem}.zip" "${stem}" > /dev/null
+          else
+            tar czf "${stem}.tar.gz" "${stem}"
+          fi
+          rm -rf "${stem}"
+          ls -l
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: ${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+
+  # ── crates.io ────────────────────────────────────────────────────────────────
+  publish:
+    name: Publish to crates.io
+    needs: [check, binaries]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # required for Trusted Publishing
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal
+
+      - name: Authenticate to crates.io
+        uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18  # v1.0.5
+        id: auth
+
+      - name: Publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+        run: cargo publish --locked
+
+  # ── GitHub Release ───────────────────────────────────────────────────────────
+  release:
+    name: GitHub Release
+    needs: [check, binaries, publish]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # create the release and upload assets
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        run: |
+          set -euo pipefail
+          cd dist
+          sha256sum ./* > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "trustbeat ${GITHUB_REF_NAME}" \
+            --generate-notes \
+            --verify-tag \
+            dist/*
+
+      # Dogfood: a qualified timestamp over the exact binaries just released, so
+      # anyone can prove which artifacts this tag produced. Evidence only — it
+      # must never turn a completed release red.
+      - name: Anchor release artifacts (TrustBeat)
+        continue-on-error: true
+        uses: TrustBeat/anchor-action@a5eb4451717f36d7bd1b6142a473003031f27512  # v1.0.0
+        with:
+          api-key: ${{ secrets.TRUSTBEAT_API_KEY }}
+          files: dist/*
+          description: "trustbeat-cli ${{ github.ref_name }}"
