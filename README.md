@@ -35,9 +35,10 @@ PROOF VALID
 cargo install trustbeat
 ```
 
-No Rust toolchain? You can also [build from source](#building-from-source).
-Prebuilt binaries for Linux, macOS and Windows are coming with the first tagged
-[release](https://github.com/TrustBeat/trustbeat-cli/releases).
+No Rust toolchain? Grab a prebuilt binary for Linux, macOS or Windows from
+[Releases](https://github.com/TrustBeat/trustbeat-cli/releases) — every release
+ships a fully static `x86_64-unknown-linux-musl` build for containers, with
+SHA-256 sums and a qualified timestamp over the artifacts themselves.
 
 ## Verification works offline, forever
 
