@@ -89,7 +89,12 @@ jobs:
           # and distroless images. The -gnu build links against glibc.
           - { target: x86_64-unknown-linux-musl, os: ubuntu-latest,    archive: tar.gz, musl: true }
           - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm, archive: tar.gz }
-          - { target: x86_64-apple-darwin,       os: macos-13,         archive: tar.gz }
+          # Both macOS targets build on the arm64 runner: macos-13 (the Intel
+          # image) has been retired from the hosted fleet, and a job requesting
+          # it queues forever without ever being assigned a runner. Apple's
+          # toolchain cross-compiles to x86_64 natively, so `rustup target add`
+          # below is all the Intel build needs.
+          - { target: x86_64-apple-darwin,       os: macos-14,         archive: tar.gz }
           - { target: aarch64-apple-darwin,      os: macos-14,         archive: tar.gz }
           - { target: x86_64-pc-windows-msvc,    os: windows-latest,   archive: zip }
     steps:
