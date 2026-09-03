@@ -337,6 +337,74 @@ mod tests {
         );
     }
 
+    // ── Shared RFC 6962 fixture ────────────────────────────────────────────
+    //
+    // tests/fixtures/rfc6962-proofs.json is checked by the Scala engine and by
+    // every SDK, so this pins cross-implementation agreement rather than
+    // self-consistency.
+
+    fn fixture() -> serde_json::Value {
+        let mut dir = std::env::current_dir().expect("cwd");
+        for _ in 0..8 {
+            let f = dir.join("tests/fixtures/rfc6962-proofs.json");
+            if f.exists() {
+                return serde_json::from_str(&std::fs::read_to_string(f).unwrap()).unwrap();
+            }
+            if !dir.pop() {
+                break;
+            }
+        }
+        panic!("rfc6962-proofs.json not found");
+    }
+
+    fn fixture_steps(p: &serde_json::Value) -> Vec<ProofStep> {
+        p["proof_path"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|s| {
+                step(
+                    s["sibling"].as_str().unwrap(),
+                    s["side"].as_str().unwrap(),
+                )
+            })
+            .collect()
+    }
+
+    #[test]
+    fn every_fixture_proof_verifies() {
+        let doc = fixture();
+        let proofs = doc["proofs"].as_array().unwrap();
+        assert_eq!(proofs.len(), 7, "fixture should hold 7 proofs");
+        for p in proofs {
+            assert!(
+                verify_inclusion(
+                    p["hash"].as_str().unwrap(),
+                    &fixture_steps(p),
+                    p["merkle_root"].as_str().unwrap(),
+                    Some(p["merkle_algorithm"].as_str().unwrap()),
+                )
+                .unwrap(),
+                "leaf {} failed",
+                p["leaf_index"]
+            );
+        }
+    }
+
+    #[test]
+    fn a_tampered_fixture_proof_fails() {
+        // Guards against the suite passing because verification is a no-op.
+        let doc = fixture();
+        let p = &doc["proofs"][0];
+        assert!(!verify_inclusion(
+            &"00".repeat(32),
+            &fixture_steps(p),
+            p["merkle_root"].as_str().unwrap(),
+            Some(RFC6962_SHA256),
+        )
+        .unwrap());
+    }
+
     #[test]
     fn unknown_algorithm_is_an_error_not_a_false_negative() {
         // "I cannot check this" must not look like "this proof is forged".
