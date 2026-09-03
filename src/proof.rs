@@ -47,6 +47,15 @@ pub struct Proof {
     pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub archive_stamps: Vec<serde_json::Value>,
+    /// Which Merkle construction produced `merkle_root`, and so how `proof_path`
+    /// must be folded. Absent on proofs issued before the field existed — those
+    /// are all `trustbeat-legacy-sha256`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub merkle_algorithm: Option<String>,
+    /// Leaves in the batch (RFC 6962 tree size). Advisory under the legacy
+    /// algorithm, whose root does not commit to the leaf count.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tree_size: Option<u64>,
 }
 
 impl Proof {

@@ -95,7 +95,12 @@ pub fn verify_proof(proof: &Proof, document_hash: Option<&str>) -> Outcome {
     }
 
     // 2. Merkle inclusion
-    match merkle::verify_inclusion(&proof.hash, &proof.proof_path, &proof.merkle_root) {
+    match merkle::verify_inclusion(
+        &proof.hash,
+        &proof.proof_path,
+        &proof.merkle_root,
+        proof.merkle_algorithm.as_deref(),
+    ) {
         Ok(true) => checks.push(Check::pass(
             "merkle",
             format!(
