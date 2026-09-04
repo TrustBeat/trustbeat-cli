@@ -1,0 +1,548 @@
+{
+  "_comment": "RFC 6962 inclusion proofs over 7 entries (SHA-256 of 'doc-0'..'doc-6'), plus additional_trees at sizes 5, 6 where the RFC's largest-power-of-two split (k=4) differs from a naive half split (k=3) - the sizes that actually pin the split rule. Generated from the RFC 6962 definition by tests/fixtures/generate_rfc6962_fixture.py, independently of the TrustBeat engine, and cross-checked against Google's transparency-dev/merkle. Every implementation - the Scala engine and all six clients - must agree with this file. See docs/MERKLE_V2.md.",
+  "entries": [
+    "doc-0",
+    "doc-1",
+    "doc-2",
+    "doc-3",
+    "doc-4",
+    "doc-5",
+    "doc-6"
+  ],
+  "merkle_root": "14439a367b88a4978b085603fefbfb4fda009d11b1662755b0e417441a0b471e",
+  "proofs": [
+    {
+      "id": "leaf-0",
+      "hash": "bd45690cb1c5ea927899cd16aa131e3473a46ad4979fe79ee13aad66b882c5ea",
+      "hash_algorithm": "SHA-256",
+      "batch_id": "batch-rfc6962-fixture",
+      "leaf_index": 0,
+      "merkle_root": "14439a367b88a4978b085603fefbfb4fda009d11b1662755b0e417441a0b471e",
+      "proof_path": [
+        {
+          "sibling": "9f64ec00d8127dac5fc87fad32dbcaa9233c0bdeb19e2733f2324f68eff2c65a",
+          "side": "right"
+        },
+        {
+          "sibling": "98f51986c235c98314df4ec5f89657466477f0f6d61829233896f689cdadd8b7",
+          "side": "right"
+        },
+        {
+          "sibling": "f9581f325a80245c18a7b468d998260accb655ee15b2f03010d9b12e51231146",
+          "side": "right"
+        }
+      ],
+      "token": "",
+      "token_format": "RFC3161_DER",
+      "tsa_serial": "1",
+      "provider": "fixture",
+      "anchored_at": "2026-01-01T00:00:00Z",
+      "merkle_algorithm": "rfc6962-sha256",
+      "tree_size": 7
+    },
+    {
+      "id": "leaf-1",
+      "hash": "bb0e4f49443794d901e8969ff11bd112e34208a0dcdf0e1eedb480cc9b3c7293",
+      "hash_algorithm": "SHA-256",
+      "batch_id": "batch-rfc6962-fixture",
+      "leaf_index": 1,
+      "merkle_root": "14439a367b88a4978b085603fefbfb4fda009d11b1662755b0e417441a0b471e",
+      "proof_path": [
+        {
+          "sibling": "d8bcd44291d2f3cd49f3301317f46dad99826c171c520a72342adf80cc2bf57d",
+          "side": "left"
+        },
+        {
+          "sibling": "98f51986c235c98314df4ec5f89657466477f0f6d61829233896f689cdadd8b7",
+          "side": "right"
+        },
+        {
+          "sibling": "f9581f325a80245c18a7b468d998260accb655ee15b2f03010d9b12e51231146",
+          "side": "right"
+        }
+      ],
+      "token": "",
+      "token_format": "RFC3161_DER",
+      "tsa_serial": "1",
+      "provider": "fixture",
+      "anchored_at": "2026-01-01T00:00:00Z",
+      "merkle_algorithm": "rfc6962-sha256",
+      "tree_size": 7
+    },
+    {
+      "id": "leaf-2",
+      "hash": "664b4034b8fc71c0322dbf8d32631aed9255598e90b3fc32e74760ff1346b83f",
+      "hash_algorithm": "SHA-256",
+      "batch_id": "batch-rfc6962-fixture",
+      "leaf_index": 2,
+      "merkle_root": "14439a367b88a4978b085603fefbfb4fda009d11b1662755b0e417441a0b471e",
+      "proof_path": [
+        {
+          "sibling": "840e4455eac780ce7418ef852b50d12aae149dd9561c7d053e5c9fb055e6f1f2",
+          "side": "right"
+        },
+        {
+          "sibling": "083dfddadb202611af1d0213d8227c68c0db36be2b61c5067375f2dfa6cae71a",
+          "side": "left"
+        },
+        {
+          "sibling": "f9581f325a80245c18a7b468d998260accb655ee15b2f03010d9b12e51231146",
+          "side": "right"
+        }
+      ],
+      "token": "",
+      "token_format": "RFC3161_DER",
+      "tsa_serial": "1",
+      "provider": "fixture",
+      "anchored_at": "2026-01-01T00:00:00Z",
+      "merkle_algorithm": "rfc6962-sha256",
+      "tree_size": 7
+    },
+    {
+      "id": "leaf-3",
+      "hash": "f0d4c476cf15853d3e6e93439e5e036be70f6d6643311cc937bad1b6f26f8b71",
+      "hash_algorithm": "SHA-256",
+      "batch_id": "batch-rfc6962-fixture",
+      "leaf_index": 3,
+      "merkle_root": "14439a367b88a4978b085603fefbfb4fda009d11b1662755b0e417441a0b471e",
+      "proof_path": [
+        {
+          "sibling": "11b3d95156f230ad7a003ddfab49545dcfea2ab5332a04680c685e80246eb1cd",
+          "side": "left"
+        },
+        {
+          "sibling": "083dfddadb202611af1d0213d8227c68c0db36be2b61c5067375f2dfa6cae71a",
+          "side": "left"
+        },
+        {
+          "sibling": "f9581f325a80245c18a7b468d998260accb655ee15b2f03010d9b12e51231146",
+          "side": "right"
+        }
+      ],
+      "token": "",
+      "token_format": "RFC3161_DER",
+      "tsa_serial": "1",
+      "provider": "fixture",
+      "anchored_at": "2026-01-01T00:00:00Z",
+      "merkle_algorithm": "rfc6962-sha256",
+      "tree_size": 7
+    },
+    {
+      "id": "leaf-4",
+      "hash": "b08f1d661bff63697bdea88f56449b0db0ef3a733edc09860cb7f2a59816989f",
+      "hash_algorithm": "SHA-256",
+      "batch_id": "batch-rfc6962-fixture",
+      "leaf_index": 4,
+      "merkle_root": "14439a367b88a4978b085603fefbfb4fda009d11b1662755b0e417441a0b471e",
+      "proof_path": [
+        {
+          "sibling": "b77a282d6286352d9202e2a0d1c856ece0ab4851cf74b812576051f39f12505f",
+          "side": "right"
+        },
+        {
+          "sibling": "5325640387ad14ff36a80937fd60c51753a7eec8780fe9da394a65451fe7cc84",
+          "side": "right"
+        },
+        {
+          "sibling": "9d4a533ccf92e70a172b3501f8d4361f82d2d8fd6e1bfdbb69b6736e6edefcd0",
+          "side": "left"
+        }
+      ],
+      "token": "",
+      "token_format": "RFC3161_DER",
+      "tsa_serial": "1",
+      "provider": "fixture",
+      "anchored_at": "2026-01-01T00:00:00Z",
+      "merkle_algorithm": "rfc6962-sha256",
+      "tree_size": 7
+    },
+    {
+      "id": "leaf-5",
+      "hash": "9c6b7c975ab67a67353d0707137ce3459b8bca395085b21bde2f46b7583338c6",
+      "hash_algorithm": "SHA-256",
+      "batch_id": "batch-rfc6962-fixture",
+      "leaf_index": 5,
+      "merkle_root": "14439a367b88a4978b085603fefbfb4fda009d11b1662755b0e417441a0b471e",
+      "proof_path": [
+        {
+          "sibling": "ad4a7b67fe12609b97240a6c3b269b6d3fb602bc04f4c66f5071234380dc4f86",
+          "side": "left"
+        },
+        {
+          "sibling": "5325640387ad14ff36a80937fd60c51753a7eec8780fe9da394a65451fe7cc84",
+          "side": "right"
+        },
+        {
+          "sibling": "9d4a533ccf92e70a172b3501f8d4361f82d2d8fd6e1bfdbb69b6736e6edefcd0",
+          "side": "left"
+        }
+      ],
+      "token": "",
+      "token_format": "RFC3161_DER",
+      "tsa_serial": "1",
+      "provider": "fixture",
+      "anchored_at": "2026-01-01T00:00:00Z",
+      "merkle_algorithm": "rfc6962-sha256",
+      "tree_size": 7
+    },
+    {
+      "id": "leaf-6",
+      "hash": "7883a679eeaa693f0d91987385c4a6f146cb857cba74e3091e29bbdd8474cd94",
+      "hash_algorithm": "SHA-256",
+      "batch_id": "batch-rfc6962-fixture",
+      "leaf_index": 6,
+      "merkle_root": "14439a367b88a4978b085603fefbfb4fda009d11b1662755b0e417441a0b471e",
+      "proof_path": [
+        {
+          "sibling": "192a2a5e17a6513e3a103c0542d0bde1058610a5c469362cc895c6d365f01891",
+          "side": "left"
+        },
+        {
+          "sibling": "9d4a533ccf92e70a172b3501f8d4361f82d2d8fd6e1bfdbb69b6736e6edefcd0",
+          "side": "left"
+        }
+      ],
+      "token": "",
+      "token_format": "RFC3161_DER",
+      "tsa_serial": "1",
+      "provider": "fixture",
+      "anchored_at": "2026-01-01T00:00:00Z",
+      "merkle_algorithm": "rfc6962-sha256",
+      "tree_size": 7
+    }
+  ],
+  "additional_trees": [
+    {
+      "leaf_count": 5,
+      "split_point": 4,
+      "entries": [
+        "doc-0",
+        "doc-1",
+        "doc-2",
+        "doc-3",
+        "doc-4"
+      ],
+      "merkle_root": "b6a3b04f0c736209de077fba84ca03dfca0568f62e53be7d45ddb1898eb228f9",
+      "proofs": [
+        {
+          "id": "leaf-0",
+          "hash": "bd45690cb1c5ea927899cd16aa131e3473a46ad4979fe79ee13aad66b882c5ea",
+          "hash_algorithm": "SHA-256",
+          "batch_id": "batch-rfc6962-fixture",
+          "leaf_index": 0,
+          "merkle_root": "b6a3b04f0c736209de077fba84ca03dfca0568f62e53be7d45ddb1898eb228f9",
+          "proof_path": [
+            {
+              "sibling": "9f64ec00d8127dac5fc87fad32dbcaa9233c0bdeb19e2733f2324f68eff2c65a",
+              "side": "right"
+            },
+            {
+              "sibling": "98f51986c235c98314df4ec5f89657466477f0f6d61829233896f689cdadd8b7",
+              "side": "right"
+            },
+            {
+              "sibling": "ad4a7b67fe12609b97240a6c3b269b6d3fb602bc04f4c66f5071234380dc4f86",
+              "side": "right"
+            }
+          ],
+          "token": "",
+          "token_format": "RFC3161_DER",
+          "tsa_serial": "1",
+          "provider": "fixture",
+          "anchored_at": "2026-01-01T00:00:00Z",
+          "merkle_algorithm": "rfc6962-sha256",
+          "tree_size": 5
+        },
+        {
+          "id": "leaf-1",
+          "hash": "bb0e4f49443794d901e8969ff11bd112e34208a0dcdf0e1eedb480cc9b3c7293",
+          "hash_algorithm": "SHA-256",
+          "batch_id": "batch-rfc6962-fixture",
+          "leaf_index": 1,
+          "merkle_root": "b6a3b04f0c736209de077fba84ca03dfca0568f62e53be7d45ddb1898eb228f9",
+          "proof_path": [
+            {
+              "sibling": "d8bcd44291d2f3cd49f3301317f46dad99826c171c520a72342adf80cc2bf57d",
+              "side": "left"
+            },
+            {
+              "sibling": "98f51986c235c98314df4ec5f89657466477f0f6d61829233896f689cdadd8b7",
+              "side": "right"
+            },
+            {
+              "sibling": "ad4a7b67fe12609b97240a6c3b269b6d3fb602bc04f4c66f5071234380dc4f86",
+              "side": "right"
+            }
+          ],
+          "token": "",
+          "token_format": "RFC3161_DER",
+          "tsa_serial": "1",
+          "provider": "fixture",
+          "anchored_at": "2026-01-01T00:00:00Z",
+          "merkle_algorithm": "rfc6962-sha256",
+          "tree_size": 5
+        },
+        {
+          "id": "leaf-2",
+          "hash": "664b4034b8fc71c0322dbf8d32631aed9255598e90b3fc32e74760ff1346b83f",
+          "hash_algorithm": "SHA-256",
+          "batch_id": "batch-rfc6962-fixture",
+          "leaf_index": 2,
+          "merkle_root": "b6a3b04f0c736209de077fba84ca03dfca0568f62e53be7d45ddb1898eb228f9",
+          "proof_path": [
+            {
+              "sibling": "840e4455eac780ce7418ef852b50d12aae149dd9561c7d053e5c9fb055e6f1f2",
+              "side": "right"
+            },
+            {
+              "sibling": "083dfddadb202611af1d0213d8227c68c0db36be2b61c5067375f2dfa6cae71a",
+              "side": "left"
+            },
+            {
+              "sibling": "ad4a7b67fe12609b97240a6c3b269b6d3fb602bc04f4c66f5071234380dc4f86",
+              "side": "right"
+            }
+          ],
+          "token": "",
+          "token_format": "RFC3161_DER",
+          "tsa_serial": "1",
+          "provider": "fixture",
+          "anchored_at": "2026-01-01T00:00:00Z",
+          "merkle_algorithm": "rfc6962-sha256",
+          "tree_size": 5
+        },
+        {
+          "id": "leaf-3",
+          "hash": "f0d4c476cf15853d3e6e93439e5e036be70f6d6643311cc937bad1b6f26f8b71",
+          "hash_algorithm": "SHA-256",
+          "batch_id": "batch-rfc6962-fixture",
+          "leaf_index": 3,
+          "merkle_root": "b6a3b04f0c736209de077fba84ca03dfca0568f62e53be7d45ddb1898eb228f9",
+          "proof_path": [
+            {
+              "sibling": "11b3d95156f230ad7a003ddfab49545dcfea2ab5332a04680c685e80246eb1cd",
+              "side": "left"
+            },
+            {
+              "sibling": "083dfddadb202611af1d0213d8227c68c0db36be2b61c5067375f2dfa6cae71a",
+              "side": "left"
+            },
+            {
+              "sibling": "ad4a7b67fe12609b97240a6c3b269b6d3fb602bc04f4c66f5071234380dc4f86",
+              "side": "right"
+            }
+          ],
+          "token": "",
+          "token_format": "RFC3161_DER",
+          "tsa_serial": "1",
+          "provider": "fixture",
+          "anchored_at": "2026-01-01T00:00:00Z",
+          "merkle_algorithm": "rfc6962-sha256",
+          "tree_size": 5
+        },
+        {
+          "id": "leaf-4",
+          "hash": "b08f1d661bff63697bdea88f56449b0db0ef3a733edc09860cb7f2a59816989f",
+          "hash_algorithm": "SHA-256",
+          "batch_id": "batch-rfc6962-fixture",
+          "leaf_index": 4,
+          "merkle_root": "b6a3b04f0c736209de077fba84ca03dfca0568f62e53be7d45ddb1898eb228f9",
+          "proof_path": [
+            {
+              "sibling": "9d4a533ccf92e70a172b3501f8d4361f82d2d8fd6e1bfdbb69b6736e6edefcd0",
+              "side": "left"
+            }
+          ],
+          "token": "",
+          "token_format": "RFC3161_DER",
+          "tsa_serial": "1",
+          "provider": "fixture",
+          "anchored_at": "2026-01-01T00:00:00Z",
+          "merkle_algorithm": "rfc6962-sha256",
+          "tree_size": 5
+        }
+      ]
+    },
+    {
+      "leaf_count": 6,
+      "split_point": 4,
+      "entries": [
+        "doc-0",
+        "doc-1",
+        "doc-2",
+        "doc-3",
+        "doc-4",
+        "doc-5"
+      ],
+      "merkle_root": "cffb925a8a28059a9cb27a0727088aa7b82fd6559e6289b225d8f5468d546a42",
+      "proofs": [
+        {
+          "id": "leaf-0",
+          "hash": "bd45690cb1c5ea927899cd16aa131e3473a46ad4979fe79ee13aad66b882c5ea",
+          "hash_algorithm": "SHA-256",
+          "batch_id": "batch-rfc6962-fixture",
+          "leaf_index": 0,
+          "merkle_root": "cffb925a8a28059a9cb27a0727088aa7b82fd6559e6289b225d8f5468d546a42",
+          "proof_path": [
+            {
+              "sibling": "9f64ec00d8127dac5fc87fad32dbcaa9233c0bdeb19e2733f2324f68eff2c65a",
+              "side": "right"
+            },
+            {
+              "sibling": "98f51986c235c98314df4ec5f89657466477f0f6d61829233896f689cdadd8b7",
+              "side": "right"
+            },
+            {
+              "sibling": "192a2a5e17a6513e3a103c0542d0bde1058610a5c469362cc895c6d365f01891",
+              "side": "right"
+            }
+          ],
+          "token": "",
+          "token_format": "RFC3161_DER",
+          "tsa_serial": "1",
+          "provider": "fixture",
+          "anchored_at": "2026-01-01T00:00:00Z",
+          "merkle_algorithm": "rfc6962-sha256",
+          "tree_size": 6
+        },
+        {
+          "id": "leaf-1",
+          "hash": "bb0e4f49443794d901e8969ff11bd112e34208a0dcdf0e1eedb480cc9b3c7293",
+          "hash_algorithm": "SHA-256",
+          "batch_id": "batch-rfc6962-fixture",
+          "leaf_index": 1,
+          "merkle_root": "cffb925a8a28059a9cb27a0727088aa7b82fd6559e6289b225d8f5468d546a42",
+          "proof_path": [
+            {
+              "sibling": "d8bcd44291d2f3cd49f3301317f46dad99826c171c520a72342adf80cc2bf57d",
+              "side": "left"
+            },
+            {
+              "sibling": "98f51986c235c98314df4ec5f89657466477f0f6d61829233896f689cdadd8b7",
+              "side": "right"
+            },
+            {
+              "sibling": "192a2a5e17a6513e3a103c0542d0bde1058610a5c469362cc895c6d365f01891",
+              "side": "right"
+            }
+          ],
+          "token": "",
+          "token_format": "RFC3161_DER",
+          "tsa_serial": "1",
+          "provider": "fixture",
+          "anchored_at": "2026-01-01T00:00:00Z",
+          "merkle_algorithm": "rfc6962-sha256",
+          "tree_size": 6
+        },
+        {
+          "id": "leaf-2",
+          "hash": "664b4034b8fc71c0322dbf8d32631aed9255598e90b3fc32e74760ff1346b83f",
+          "hash_algorithm": "SHA-256",
+          "batch_id": "batch-rfc6962-fixture",
+          "leaf_index": 2,
+          "merkle_root": "cffb925a8a28059a9cb27a0727088aa7b82fd6559e6289b225d8f5468d546a42",
+          "proof_path": [
+            {
+              "sibling": "840e4455eac780ce7418ef852b50d12aae149dd9561c7d053e5c9fb055e6f1f2",
+              "side": "right"
+            },
+            {
+              "sibling": "083dfddadb202611af1d0213d8227c68c0db36be2b61c5067375f2dfa6cae71a",
+              "side": "left"
+            },
+            {
+              "sibling": "192a2a5e17a6513e3a103c0542d0bde1058610a5c469362cc895c6d365f01891",
+              "side": "right"
+            }
+          ],
+          "token": "",
+          "token_format": "RFC3161_DER",
+          "tsa_serial": "1",
+          "provider": "fixture",
+          "anchored_at": "2026-01-01T00:00:00Z",
+          "merkle_algorithm": "rfc6962-sha256",
+          "tree_size": 6
+        },
+        {
+          "id": "leaf-3",
+          "hash": "f0d4c476cf15853d3e6e93439e5e036be70f6d6643311cc937bad1b6f26f8b71",
+          "hash_algorithm": "SHA-256",
+          "batch_id": "batch-rfc6962-fixture",
+          "leaf_index": 3,
+          "merkle_root": "cffb925a8a28059a9cb27a0727088aa7b82fd6559e6289b225d8f5468d546a42",
+          "proof_path": [
+            {
+              "sibling": "11b3d95156f230ad7a003ddfab49545dcfea2ab5332a04680c685e80246eb1cd",
+              "side": "left"
+            },
+            {
+              "sibling": "083dfddadb202611af1d0213d8227c68c0db36be2b61c5067375f2dfa6cae71a",
+              "side": "left"
+            },
+            {
+              "sibling": "192a2a5e17a6513e3a103c0542d0bde1058610a5c469362cc895c6d365f01891",
+              "side": "right"
+            }
+          ],
+          "token": "",
+          "token_format": "RFC3161_DER",
+          "tsa_serial": "1",
+          "provider": "fixture",
+          "anchored_at": "2026-01-01T00:00:00Z",
+          "merkle_algorithm": "rfc6962-sha256",
+          "tree_size": 6
+        },
+        {
+          "id": "leaf-4",
+          "hash": "b08f1d661bff63697bdea88f56449b0db0ef3a733edc09860cb7f2a59816989f",
+          "hash_algorithm": "SHA-256",
+          "batch_id": "batch-rfc6962-fixture",
+          "leaf_index": 4,
+          "merkle_root": "cffb925a8a28059a9cb27a0727088aa7b82fd6559e6289b225d8f5468d546a42",
+          "proof_path": [
+            {
+              "sibling": "b77a282d6286352d9202e2a0d1c856ece0ab4851cf74b812576051f39f12505f",
+              "side": "right"
+            },
+            {
+              "sibling": "9d4a533ccf92e70a172b3501f8d4361f82d2d8fd6e1bfdbb69b6736e6edefcd0",
+              "side": "left"
+            }
+          ],
+          "token": "",
+          "token_format": "RFC3161_DER",
+          "tsa_serial": "1",
+          "provider": "fixture",
+          "anchored_at": "2026-01-01T00:00:00Z",
+          "merkle_algorithm": "rfc6962-sha256",
+          "tree_size": 6
+        },
+        {
+          "id": "leaf-5",
+          "hash": "9c6b7c975ab67a67353d0707137ce3459b8bca395085b21bde2f46b7583338c6",
+          "hash_algorithm": "SHA-256",
+          "batch_id": "batch-rfc6962-fixture",
+          "leaf_index": 5,
+          "merkle_root": "cffb925a8a28059a9cb27a0727088aa7b82fd6559e6289b225d8f5468d546a42",
+          "proof_path": [
+            {
+              "sibling": "ad4a7b67fe12609b97240a6c3b269b6d3fb602bc04f4c66f5071234380dc4f86",
+              "side": "left"
+            },
+            {
+              "sibling": "9d4a533ccf92e70a172b3501f8d4361f82d2d8fd6e1bfdbb69b6736e6edefcd0",
+              "side": "left"
+            }
+          ],
+          "token": "",
+          "token_format": "RFC3161_DER",
+          "tsa_serial": "1",
+          "provider": "fixture",
+          "anchored_at": "2026-01-01T00:00:00Z",
+          "merkle_algorithm": "rfc6962-sha256",
+          "tree_size": 6
+        }
+      ]
+    }
+  ]
+}
