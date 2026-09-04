@@ -24,7 +24,7 @@
 use cms::cert::CertificateChoices;
 use cms::content_info::ContentInfo;
 use cms::signed_data::{SignedData, SignerInfo};
-use der::{Decode, Encode};
+use der::{Decode, Encode, Reader};
 use sha2::{Digest, Sha256, Sha512};
 use x509_cert::spki::SubjectPublicKeyInfoOwned;
 use x509_cert::Certificate;
@@ -174,14 +174,84 @@ fn parse_tst_info(tst_der: &[u8]) -> Result<TstInfo, TokenError> {
     let hashed = der::asn1::OctetString::decode(&mut r).map_err(malformed)?;
 
     let serial = der::asn1::Int::decode(&mut r).map_err(malformed)?;
-    let gen_time = der::asn1::GeneralizedTime::decode(&mut r).map_err(malformed)?;
+    let gen_time_unix = decode_gen_time(&mut r)?;
 
     Ok(TstInfo {
         imprint: hex_encode(hashed.as_bytes()),
         imprint_alg: hash_oid.to_string(),
         serial: int_to_decimal(serial.as_bytes()),
-        gen_time_unix: gen_time.to_unix_duration().as_secs() as i64,
+        gen_time_unix,
     })
+}
+
+/// Decodes `TSTInfo.genTime`, tolerating the fractional seconds RFC 3161 allows.
+///
+/// `der::asn1::GeneralizedTime` enforces the X.509 profile (RFC 5280 §4.1.2.5.2),
+/// which pins the encoding to exactly `YYYYMMDDHHMMSSZ` and rejects a fraction.
+/// RFC 3161 §2.4.2 is deliberately looser — genTime pairs with the `accuracy`
+/// field, and a TSA may express sub-second precision. EuroCert does exactly that
+/// (`20260904160723.776Z`), so decoding a real qualified token through the strict
+/// type failed outright and the CLI reported PROOF INVALID for a perfectly valid
+/// timestamp. SK ID Solutions emits whole seconds, which is why this went unseen.
+///
+/// The fraction is parsed for validity and then dropped: [`TstInfo`] reports whole
+/// seconds, and no verification decision depends on milliseconds.
+fn decode_gen_time(r: &mut der::SliceReader<'_>) -> Result<i64, TokenError> {
+    let header = der::Header::decode(r).map_err(malformed)?;
+    if header.tag != der::Tag::GeneralizedTime {
+        return Err(TokenError::Malformed(format!(
+            "expected genTime GeneralizedTime, found {}",
+            header.tag
+        )));
+    }
+    let bytes = r.read_slice(header.length).map_err(malformed)?;
+    parse_generalized_time(bytes)
+}
+
+/// Parses an ASN.1 `GeneralizedTime` body into Unix seconds.
+///
+/// Accepts `YYYYMMDDHHMMSSZ` and `YYYYMMDDHHMMSS.fffZ` (ASN.1 permits `,` as the
+/// decimal separator too). Offsets other than `Z` are refused rather than guessed
+/// at: RFC 3161 §2.4.2 requires genTime in UTC, so a local-time token is a token
+/// we do not understand, not one we should silently reinterpret.
+fn parse_generalized_time(bytes: &[u8]) -> Result<i64, TokenError> {
+    let text = core::str::from_utf8(bytes)
+        .map_err(|_| TokenError::Malformed("genTime is not valid ASCII".into()))?;
+
+    let body = text.strip_suffix('Z').ok_or_else(|| {
+        TokenError::Malformed(format!("genTime {text:?} is not UTC (must end in 'Z')"))
+    })?;
+
+    let (whole, fraction) = match body.split_once(['.', ',']) {
+        Some((w, f)) => (w, Some(f)),
+        None => (body, None),
+    };
+
+    if whole.len() != 14 || !whole.bytes().all(|b| b.is_ascii_digit()) {
+        return Err(TokenError::Malformed(format!(
+            "genTime {text:?} is not YYYYMMDDHHMMSS[.fff]Z"
+        )));
+    }
+    if let Some(f) = fraction {
+        if f.is_empty() || !f.bytes().all(|b| b.is_ascii_digit()) {
+            return Err(TokenError::Malformed(format!(
+                "genTime {text:?} has a malformed fractional part"
+            )));
+        }
+    }
+
+    let field = |a: usize, b: usize| whole[a..b].parse::<u32>().unwrap_or(0);
+    let date = der::DateTime::new(
+        field(0, 4) as u16,
+        field(4, 6) as u8,
+        field(6, 8) as u8,
+        field(8, 10) as u8,
+        field(10, 12) as u8,
+        field(12, 14) as u8,
+    )
+    .map_err(|_| TokenError::Malformed(format!("genTime {text:?} is not a real date")))?;
+
+    Ok(date.unix_duration().as_secs() as i64)
 }
 
 /// Renders a big-endian unsigned INTEGER as a decimal string without pulling in
@@ -391,5 +461,74 @@ mod tests {
         assert_eq!(digest_name(ID_SHA256), "SHA-256");
         assert_eq!(digest_name(ID_SHA512), "SHA-512");
         assert_eq!(digest_name("1.2.3"), "1.2.3");
+    }
+
+    // ── genTime parsing ─────────────────────────────────────────────────────
+    //
+    // RFC 3161 §2.4.2 permits a fractional part on genTime; RFC 5280 §4.1.2.5.2
+    // (the X.509 profile the `der` GeneralizedTime type enforces) does not. A
+    // qualified TSA is entitled to either, and 0.2.0 only handled one of them.
+
+    #[test]
+    fn gen_time_accepts_whole_seconds() {
+        // SK ID Solutions' encoding.
+        let t = parse_generalized_time(b"20260404075348Z").unwrap();
+        assert_eq!(t, 1775289228);
+    }
+
+    #[test]
+    fn gen_time_accepts_fractional_seconds() {
+        // EuroCert's encoding — the case that shipped broken in 0.2.0.
+        let whole = parse_generalized_time(b"20260904160723Z").unwrap();
+        let frac = parse_generalized_time(b"20260904160723.776Z").unwrap();
+        assert_eq!(frac, whole, "the fraction must be dropped, not rounded");
+        assert_eq!(frac, 1788538043);
+    }
+
+    #[test]
+    fn gen_time_accepts_a_comma_as_the_decimal_separator() {
+        // ASN.1 allows either separator; some TSAs emit a comma.
+        assert_eq!(
+            parse_generalized_time(b"20260904160723,776Z").unwrap(),
+            parse_generalized_time(b"20260904160723.776Z").unwrap()
+        );
+    }
+
+    #[test]
+    fn gen_time_accepts_any_fraction_length() {
+        for s in [
+            &b"20260904160723.7Z"[..],
+            &b"20260904160723.77Z"[..],
+            &b"20260904160723.776999Z"[..],
+        ] {
+            assert_eq!(parse_generalized_time(s).unwrap(), 1788538043);
+        }
+    }
+
+    #[test]
+    fn gen_time_refuses_non_utc() {
+        // RFC 3161 requires UTC. A local-time token is one we do not understand,
+        // not one to silently reinterpret as UTC.
+        assert!(parse_generalized_time(b"20260904160723+0200").is_err());
+        assert!(parse_generalized_time(b"20260904160723").is_err());
+    }
+
+    #[test]
+    fn gen_time_refuses_a_malformed_fraction() {
+        assert!(parse_generalized_time(b"20260904160723.Z").is_err());
+        assert!(parse_generalized_time(b"20260904160723.abcZ").is_err());
+    }
+
+    #[test]
+    fn gen_time_refuses_a_wrong_length_or_non_digits() {
+        assert!(parse_generalized_time(b"202609041607Z").is_err());
+        assert!(parse_generalized_time(b"2026090416072xZ").is_err());
+        assert!(parse_generalized_time(b"").is_err());
+    }
+
+    #[test]
+    fn gen_time_refuses_an_impossible_date() {
+        assert!(parse_generalized_time(b"20261304160723Z").is_err()); // month 13
+        assert!(parse_generalized_time(b"20260932160723Z").is_err()); // day 32
     }
 }

@@ -1,8 +1,11 @@
 //! End-to-end tests of the binary itself.
 //!
 //! These lock the *contract* the README documents: exit codes and the shape of
-//! `--json` output. Everything here runs offline against a real SK ID Solutions
-//! token in tests/fixtures/demo-proof.json.
+//! `--json` output. Everything here runs offline against real qualified tokens:
+//! SK ID Solutions in tests/fixtures/demo-proof.json and EuroCert in
+//! tests/fixtures/eurocert-proof.json. Both providers are covered deliberately —
+//! they encode genTime differently, and testing only SK is what let the EuroCert
+//! parse bug ship.
 
 use assert_cmd::Command;
 use predicates::prelude::*;
@@ -16,6 +19,13 @@ fn tb() -> Command {
 }
 
 const PROOF: &str = "tests/fixtures/demo-proof.json";
+
+/// A real EuroCert QTSA token. EuroCert stamps genTime with fractional seconds
+/// (`20260904160723.776Z`), which RFC 3161 §2.4.2 permits; the strict X.509
+/// GeneralizedTime decoder rejects it, and 0.2.0 therefore reported PROOF INVALID
+/// for every EuroCert-anchored proof. EuroCert is the production fallback QTSA,
+/// so this fixture guards a live false-negative, not a theoretical one.
+const EUROCERT_PROOF: &str = "tests/fixtures/eurocert-proof.json";
 
 #[test]
 fn verify_a_valid_proof_exits_zero() {
@@ -147,4 +157,37 @@ fn tempdir() -> std::path::PathBuf {
     ));
     std::fs::create_dir_all(&dir).unwrap();
     dir
+}
+
+#[test]
+fn verify_a_eurocert_proof_exits_zero() {
+    tb().args(["verify", EUROCERT_PROOF])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("PROOF VALID"));
+}
+
+#[test]
+fn a_eurocert_token_reports_its_tsa_and_whole_second_time() {
+    // The fractional part is parsed for validity and dropped: TstInfo reports
+    // whole seconds and no verification decision depends on milliseconds.
+    tb().args(["verify", EUROCERT_PROOF])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EuroCert"))
+        .stdout(predicate::str::contains("2026-09-04T16:07:23Z"));
+}
+
+#[test]
+fn a_eurocert_proof_verifies_its_rfc6962_merkle_path() {
+    // The first committed fixture with a real multi-step RFC 6962 path — the SK
+    // one is a single-leaf batch with an empty path — so this exercises the v2
+    // fold end to end through the binary rather than only in unit tests.
+    tb().args(["verify", EUROCERT_PROOF, "--json"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "3 path step(s) re-derive the batch root",
+        ))
+        .stdout(predicate::str::contains("\"valid\": true"));
 }
