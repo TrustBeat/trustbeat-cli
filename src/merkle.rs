@@ -220,7 +220,9 @@ mod tests {
         let s2 = "33".repeat(32);
         let level1 = sha256_hex(&[&hex_decode(&leaf).unwrap(), &hex_decode(&s1).unwrap()]);
         let root = sha256_hex(&[&hex_decode(&s2).unwrap(), &hex_decode(&level1).unwrap()]);
-        assert!(verify_inclusion(&leaf, &[step(&s1, "right"), step(&s2, "left")], &root, None).unwrap());
+        assert!(
+            verify_inclusion(&leaf, &[step(&s1, "right"), step(&s2, "left")], &root, None).unwrap()
+        );
     }
 
     #[test]
@@ -245,8 +247,13 @@ mod tests {
             MerkleError::BadLeafHex("zz".into())
         );
         assert_eq!(
-            verify_inclusion(&"aa".repeat(32), &[step("zz", "left")], &"aa".repeat(32), None)
-                .unwrap_err(),
+            verify_inclusion(
+                &"aa".repeat(32),
+                &[step("zz", "left")],
+                &"aa".repeat(32),
+                None
+            )
+            .unwrap_err(),
             MerkleError::BadSiblingHex {
                 step: 0,
                 value: "zz".into()
@@ -304,8 +311,14 @@ mod tests {
         // MTH([SHA256("a"), SHA256("b"), SHA256("c")]) per RFC 6962, leaf 0.
         let a = sha256_hex(&[b"a"]);
         let path = [
-            step("a0d9f0a50b35b9f7d7edc57fb64f4771ddef0fefeaca4e6f949a1514db5b136d", "right"),
-            step("6a3fc11b79f836bda340e75c8906e961b8adf4d6a08a2b992e3f38cd6ff38ebf", "right"),
+            step(
+                "a0d9f0a50b35b9f7d7edc57fb64f4771ddef0fefeaca4e6f949a1514db5b136d",
+                "right",
+            ),
+            step(
+                "6a3fc11b79f836bda340e75c8906e961b8adf4d6a08a2b992e3f38cd6ff38ebf",
+                "right",
+            ),
         ];
         let root = "cac3d448d4e20a2ad5eae1f500e63c2a7f9217cd14572ba7fd22e26dc1ec2648";
         assert!(verify_inclusion(&a, &path, root, Some(RFC6962_SHA256)).unwrap());
@@ -316,8 +329,10 @@ mod tests {
     // proves self-consistency; these prove conformance.
     const UPSTREAM_ENTRY: &str = "4c313233343536"; // hex of "L123456"
     const UPSTREAM_LEAF: &str = "395aa064aa4c29f7010acfe3f25db9485bbd4b91897b6ad7ad547639252b4d56";
-    const UPSTREAM_EMPTY_LEAF: &str = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d";
-    const UPSTREAM_ROOT_2: &str = "bf9ae70442844df993ca0001a7c8a095c5f145857960b1ee389df6cbe84b5bf3";
+    const UPSTREAM_EMPTY_LEAF: &str =
+        "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d";
+    const UPSTREAM_ROOT_2: &str =
+        "bf9ae70442844df993ca0001a7c8a095c5f145857960b1ee389df6cbe84b5bf3";
 
     #[test]
     fn leaf_hash_matches_upstream_vector() {
@@ -362,12 +377,7 @@ mod tests {
             .as_array()
             .unwrap()
             .iter()
-            .map(|s| {
-                step(
-                    s["sibling"].as_str().unwrap(),
-                    s["side"].as_str().unwrap(),
-                )
-            })
+            .map(|s| step(s["sibling"].as_str().unwrap(), s["side"].as_str().unwrap()))
             .collect()
     }
 
